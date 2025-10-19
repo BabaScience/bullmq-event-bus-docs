@@ -1,0 +1,122 @@
+graph TB
+    subgraph "Pattern 1: Simple Pub/Sub"
+        P1[Publisher] -->|Event| EB1[Event Bus]
+        EB1 --> S1[Subscriber 1]
+        EB1 --> S2[Subscriber 2]
+        EB1 --> S3[Subscriber N]
+        
+        UC1[Use Cases:<br/>- Notifications<br/>- Logging<br/>- Analytics<br/>- Audit trails]
+    end
+    
+    subgraph "Pattern 2: Request/Reply"
+        REQ[Requestor] -->|Request Event| EB2[Event Bus]
+        EB2 -->|Process| PROC[Processor]
+        PROC -->|Reply Event| EB2
+        EB2 -->|Response| REQ
+        
+        UC2[Use Cases:<br/>- RPC-style communication<br/>- Synchronous operations<br/>- Command pattern<br/>- Query responses]
+    end
+    
+    subgraph "Pattern 3: Event Choreography (Saga)"
+        S1A[Service A] -->|Event 1| EB3[Event Bus]
+        EB3 -->|Trigger| S2B[Service B]
+        S2B -->|Event 2| EB3
+        EB3 -->|Trigger| S3C[Service C]
+        S3C -->|Event 3| EB3
+        EB3 -->|Complete| S1A
+        
+        S3C -.->|Compensate on Failure| EB3
+        EB3 -.->|Rollback| S2B
+        S2B -.->|Rollback| EB3
+        EB3 -.->|Rollback| S1A
+        
+        UC3[Use Cases:<br/>- Distributed transactions<br/>- Multi-step workflows<br/>- Order processing<br/>- Booking systems]
+    end
+    
+    subgraph "Pattern 4: Event Sourcing"
+        CMD[Command] -->|Execute| AGG[Aggregate]
+        AGG -->|Generate| EVTS[Domain Events]
+        EVTS -->|Append| ES[(Event Store)]
+        ES -->|Publish| EB4[Event Bus]
+        
+        EB4 --> PROJ1[Projection 1]
+        EB4 --> PROJ2[Projection 2]
+        EB4 --> PROJN[Projection N]
+        
+        PROJ1 --> VIEW1[(Read Model 1)]
+        PROJ2 --> VIEW2[(Read Model 2)]
+        PROJN --> VIEWN[(Read Model N)]
+        
+        UC4[Use Cases:<br/>- Audit requirements<br/>- Time-travel queries<br/>- Event replay<br/>- CQRS pattern]
+    end
+    
+    subgraph "Pattern 5: Priority Queue"
+        HP[High Priority Events] -->|Priority: 1| EB5[Event Bus]
+        MP[Medium Priority Events] -->|Priority: 5| EB5
+        LP[Low Priority Events] -->|Priority: 10| EB5
+        
+        EB5 -->|Process First| HW[Workers]
+        
+        UC5[Use Cases:<br/>- Critical operations<br/>- SLA-based processing<br/>- VIP customer handling<br/>- Emergency responses]
+    end
+    
+    subgraph "Pattern 6: Fan-out/Fan-in"
+        MAIN[Main Job] -->|Split| EB6[Event Bus]
+        
+        EB6 --> SUB1[Subtask 1]
+        EB6 --> SUB2[Subtask 2]
+        EB6 --> SUB3[Subtask N]
+        
+        SUB1 -->|Complete| AGG1[Aggregator]
+        SUB2 -->|Complete| AGG1
+        SUB3 -->|Complete| AGG1
+        
+        AGG1 -->|All Complete| EB6
+        EB6 -->|Final Result| MAIN
+        
+        UC6[Use Cases:<br/>- Parallel processing<br/>- Map-reduce operations<br/>- Batch processing<br/>- Data aggregation]
+    end
+    
+    subgraph "Pattern 7: Circuit Breaker"
+        SEND[Sender] -->|Event| CB[Circuit Breaker]
+        
+        CB -->|CLOSED State| EB7[Event Bus]
+        CB -.->|OPEN State| ERR[Error Response]
+        CB -.->|HALF-OPEN| TEST[Test Request]
+        
+        EB7 -->|Success| RECV[Receiver]
+        EB7 -.->|Failures| CB
+        
+        UC7[Use Cases:<br/>- Fault tolerance<br/>- Cascading failure prevention<br/>- Service degradation<br/>- Rate limiting]
+    end
+    
+    subgraph "Pattern 8: Dead Letter Queue"
+        NORM[Normal Queue] -.->|Max Retries Failed| DLQ[Dead Letter Queue]
+        
+        DLQ --> MAN[Manual Review]
+        DLQ --> AUTO[Auto-remediation]
+        
+        MAN -.->|Fixed & Retry| NORM
+        AUTO -.->|Fixed & Retry| NORM
+        
+        UC8[Use Cases:<br/>- Error handling<br/>- Failed message analysis<br/>- Debugging<br/>- Data recovery]
+    end
+    
+    %% Styling
+    style EB1 fill:#4ecdc4,stroke:#1a7a72,stroke-width:3px
+    style EB2 fill:#4ecdc4,stroke:#1a7a72,stroke-width:3px
+    style EB3 fill:#4ecdc4,stroke:#1a7a72,stroke-width:3px
+    style EB4 fill:#4ecdc4,stroke:#1a7a72,stroke-width:3px
+    style EB5 fill:#4ecdc4,stroke:#1a7a72,stroke-width:3px
+    style EB6 fill:#4ecdc4,stroke:#1a7a72,stroke-width:3px
+    style EB7 fill:#4ecdc4,stroke:#1a7a72,stroke-width:3px
+    style DLQ fill:#ff6b6b,stroke:#c92a2a,stroke-width:3px
+    style ES fill:#ffd93d,stroke:#f39c12,stroke-width:3px
+    style UC1 fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style UC2 fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style UC3 fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style UC4 fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style UC5 fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style UC6 fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style UC7 fill:#e8f5e9,stroke:#4caf50,stroke-width:2px
+    style UC8 fill:#e8f5e9,stroke:#4caf50,stroke-width:2px

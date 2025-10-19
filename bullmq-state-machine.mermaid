@@ -1,0 +1,94 @@
+stateDiagram-v2
+    [*] --> Waiting: Job Added to Queue
+    
+    Waiting --> Active: Worker Picks Up Job
+    Waiting --> Delayed: Scheduled for Future
+    Waiting --> Prioritized: High Priority Job
+    
+    Delayed --> Waiting: Delay Elapsed
+    Prioritized --> Active: Worker Available
+    
+    Active --> Processing: Job Handler Executing
+    
+    Processing --> Completed: Success
+    Processing --> Failed: Error Thrown
+    Processing --> Stalled: Worker Timeout/Crash
+    
+    Failed --> Waiting: Retry (Attempts < Max)
+    Failed --> DeadLetter: Max Retries Reached
+    Failed --> Failed: Exponential Backoff
+    
+    Stalled --> Waiting: Job Recovered
+    Stalled --> Failed: Recovery Failed
+    
+    Completed --> [*]: Job Finished Successfully
+    DeadLetter --> ManualReview: Requires Intervention
+    ManualReview --> Waiting: Manually Retried
+    ManualReview --> Archived: Permanently Failed
+    
+    Archived --> [*]
+    
+    note right of Waiting
+        State: WAITING
+        - Job is in queue
+        - Ready to be processed
+        - Can be prioritized
+        - Default TTL: indefinite
+    end note
+    
+    note right of Active
+        State: ACTIVE
+        - Locked by a worker
+        - Processing in progress
+        - Has timeout protection
+        - Prevents double processing
+    end note
+    
+    note right of Processing
+        State: PROCESSING
+        - Handler function executing
+        - Can report progress
+        - Can update job data
+        - Monitored by worker
+    end note
+    
+    note right of Completed
+        State: COMPLETED
+        - Successfully processed
+        - Result stored (optional)
+        - Auto-removed based on config
+        - Metrics recorded
+    end note
+    
+    note right of Failed
+        State: FAILED
+        - Processing failed
+        - Error logged
+        - Retry with backoff
+        - Attempts tracked
+    end note
+    
+    note right of Delayed
+        State: DELAYED
+        - Scheduled for future
+        - Timestamp-based activation
+        - Use cases: Reminders,
+          Scheduled tasks,
+          Rate limiting
+    end note
+    
+    note right of DeadLetter
+        State: DEAD LETTER
+        - All retries exhausted
+        - Manual intervention needed
+        - Logged for analysis
+        - Can be replayed
+    end note
+    
+    note right of Stalled
+        State: STALLED
+        - Worker crashed/timeout
+        - Job recovery process
+        - Automatic retry possible
+        - Prevents job loss
+    end note
